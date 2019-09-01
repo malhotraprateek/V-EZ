@@ -115,7 +115,13 @@ if(WIN32)
     set(DEBUG_LIB_SUFFIX "d")
 endif(WIN32)
 
-add_library(VEZ SHARED ${COMPILER_SOURCES} ${CORE_SOURCES} ${UTILITY_SOURCES} ${ROOT_SOURCES})
+option (VEZ_BUILD_SHARED "Build shared library for VEZ" ON)
+
+if (VEZ_BUILD_SHARED)
+    add_library(VEZ SHARED ${COMPILER_SOURCES} ${CORE_SOURCES} ${UTILITY_SOURCES} ${ROOT_SOURCES})
+else ()
+    add_library(VEZ STATIC ${COMPILER_SOURCES} ${CORE_SOURCES} ${UTILITY_SOURCES} ${ROOT_SOURCES})
+endif(VEZ_BUILD_SHARED)
 
 include_directories(
     ${VEZ_ROOT_DIR}/Source
