@@ -554,15 +554,26 @@ namespace vez
         // Determine a "default" image layout based on the usage.  This default image layout will be assumed during command buffer recording.
         // Ordering of conditional statements below determine image layout precedence.
         // Example: When usage is SAMPLED_BIT, that takes precendence over the image being used as a color attachment or for transfer operations.
-        auto usage = pCreateInfo->usage;
-        VkImageLayout defaultLayout = imageCreateInfo.initialLayout;
-        if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) defaultLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        else if (usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) defaultLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-        else if (usage & VK_IMAGE_USAGE_STORAGE_BIT) defaultLayout = VK_IMAGE_LAYOUT_GENERAL;
-        else if (usage & VK_IMAGE_USAGE_SAMPLED_BIT) defaultLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        else if (usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) defaultLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        else if (usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) defaultLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        else if (usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) defaultLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		auto usage = pCreateInfo->usage;
+		VkImageLayout defaultLayout = imageCreateInfo.initialLayout;
+		if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) defaultLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		// PM: Need to check for VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT and set layout to VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL to fix validation issues in shadow mapping example.
+		//      Otherwise the example will raise validation error(s).
+		//		Temporary fix taken from JSandusky's comment in the original V-EZ repo. issue #69.
+
+		else if (usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+			if (usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) // use input-attachment bit as an additional flag
+				defaultLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			else
+				defaultLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
+
+		else if (usage & VK_IMAGE_USAGE_STORAGE_BIT) defaultLayout = VK_IMAGE_LAYOUT_GENERAL;
+		else if (usage & VK_IMAGE_USAGE_SAMPLED_BIT) defaultLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		else if (usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) defaultLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		else if (usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) defaultLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		else if (usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) defaultLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
         // Create an Image class instance from handle.
         *ppImage = Image::CreateFromHandle(this, pCreateInfo, defaultLayout, handle, allocation);

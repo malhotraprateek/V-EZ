@@ -229,7 +229,11 @@ void ShadowMapping::CreateShadowMap()
     imageCreateInfo.arrayLayers = 1;
     imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    imageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    // PM: Needs to use VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT after integrating JSandusky's temporary fix from the original V-EZ repo issue #69.
+    //      Otherwise this example will raise validation error(s).
+    imageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+
     auto result = vezCreateImage(AppBase::GetDevice(), VEZ_MEMORY_GPU_ONLY, &imageCreateInfo, &m_depthImage);
     if (result != VK_SUCCESS)
         FATAL("vkCreateImage failed");
